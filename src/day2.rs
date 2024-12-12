@@ -37,32 +37,42 @@ fn report_is_safe(report: Vec<i32>) -> bool {
     return true;
 }
 
-
-pub fn count_safe_reports() {
-    // Read and parse the input file into vectors of int split by spaces
-
+fn parse_input() -> impl Iterator<Item = Vec<i32>> {
     let input = include_str!("../data/day2_1.txt");
 
-    let mut safe_reports = 0;
+    input.lines().map(|line| {
+        line.split_whitespace()
+            .filter_map(|num| num.parse::<i32>().ok())
+            .collect()
+    })
+}
 
-    for line in input.lines() {
-        // Split the line by whitespace and collect into a vector
-        let str_numbers: Vec<&str> = line.split_whitespace().collect();
+pub fn count_safe_reports() {
+    let safe_reports = parse_input()
+        .filter(|report| report_is_safe(report.to_vec()))
+        .count();
 
-        // Parse the numbers into integers
-        let mut numbers = Vec::new();
+    println!("Safe reports: {}", safe_reports);
+}
 
-        for num in str_numbers {
-            if let Ok(n) = num.parse::<i32>() {
-                numbers.push(n);
+pub fn count_tolerate_reports() {
+    // If the report fails, try removing a number (one at a time) to see if it succeeds
+
+    let mut count = 0;
+    for report in parse_input() {
+        if report_is_safe(report.to_vec()){
+            count += 1;
+        } else {
+            for i in 0..report.len(){
+                let mut vec = report.to_vec();
+                vec.remove(i);
+                if report_is_safe(vec){
+                    count += 1;
+                    break;
+                }
             }
-        }
-        // println!("{:?}", numbers);
-
-        if report_is_safe(numbers) {
-            safe_reports += 1;
         }
     }
 
-    println!("Safe reports: {}", safe_reports);
+    println!("Tolerable safe reports: {}", count);
 }
